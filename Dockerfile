@@ -7,15 +7,13 @@ RUN apk --update add \
       curl \
       wget \
       bash &&\
-    pip install --upgrade awscli &&\
-    mkdir /root/.aws
+      pip install --upgrade awscli &&\
+      mkdir /root/.aws
 
 COPY etcd-aws-cluster /etcd-aws-cluster
-
-# Expose volume for adding credentials
-VOLUME ["/root/.aws"]
 
 #Expose directory to write output to
 VOLUME ["/etc/sysconfig/"]
 
-ENTRYPOINT /etcd-aws-cluster
+# Remove entry point so the image can be a generic aws cli tool image.
+#ENTRYPOINT /etcd-aws-cluster
