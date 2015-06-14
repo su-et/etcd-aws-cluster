@@ -2,7 +2,7 @@
 pkg="getPeers"
 version="0.3"
 etcd_peers_file_path="/etc/sysconfig/etcd-peers"
-region="us-west-2"
+region=${REGION:-"us-east-1"}
 
 # ETCD API https://coreos.com/etcd/docs/2.0.11/other_apis.html
 ADD_OK=201
@@ -103,7 +103,7 @@ if [[ $etcd_existing_peer_urls && $etcd_existing_peer_names != *"$ec2_instance_i
     status=$(curl -f -sw %{http_code} -XPOST "$etcd_good_member_url/v2/members" -H "Content-Type: application/json" -d "{\"peerURLs\": [\"http://$ec2_instance_ip:2380\"], \"name\": \"$ec2_instance_id\"}")
     if [ $status != "$ADD_OK" ];
     then
-    	echo "$pkg: unable to add $$ec2_instance_ip to the cluster: return code $status."
+    	echo "$pkg: unable to add $ec2_instance_ip to the cluster: return code $status."
     	exit 7
     fi
     
