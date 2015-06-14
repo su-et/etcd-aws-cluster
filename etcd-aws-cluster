@@ -2,7 +2,7 @@
 pkg="getPeers"
 version="0.3"
 etcd_peers_file_path="/etc/sysconfig/etcd-peers"
-region="us-west-2"
+region=${REGION:-"us-east-1"}
 
 # ETCD API https://coreos.com/etcd/docs/2.0.11/other_apis.html
 ADD_OK=201
