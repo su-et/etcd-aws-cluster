@@ -4,6 +4,10 @@ version="0.3"
 etcd_peers_file_path="/etc/sysconfig/etcd-peers"
 region="us-west-2"
 
+# ETCD API https://coreos.com/etcd/docs/2.0.11/other_apis.html
+ADD_OK=201
+DELETE_OK=204
+
 #if the script has already run just exit
 if [ -f "$etcd_peers_file_path" ]; then
     echo "$pkg: etcd-peers file $etcd_peers_file_path already created, exiting"
@@ -77,11 +81,13 @@ if [[ $etcd_existing_peer_urls && $etcd_existing_peer_names != *"$ec2_instance_i
 
     if [[ $bad_peer ]]; then
         for bp in $bad_peer; do
-            echo "removing bad peer $bp"
-            if ! curl -f -s "$etcd_good_member_url/v2/members/$bp" -XDELETE; then
-                echo "$pkg: ERROR: failed to remove bad peer: $bad_peer"
-                exit 6
-            fi
+            echo "would removing bad peer $bp"
+            #status=$(curl -f -sw %{http_code% "$etcd_good_member_url/v2/members/$bp" -XDELETE)
+            #if [ "$status" != "$DELETE_OK" ];
+            #then 
+            #    echo "$pkg: ERROR: failed to remove bad peer: $bad_peer, recurn code $status."
+            #    exit 6
+            #fi
         done
     fi
     
@@ -94,8 +100,10 @@ if [[ $etcd_existing_peer_urls && $etcd_existing_peer_names != *"$ec2_instance_i
     
     # join an existing cluster
     echo "adding instance ID $ec2_instance_id with IP $ec2_instance_ip"
-    if ! curl -f -s -XPOST "$etcd_good_member_url/v2/members" -H "Content-Type: application/json" -d "{\"peerURLs\": [\"http://$ec2_instance_ip:2380\"], \"name\": \"$ec2_instance_id\"}"; then
-    	echo "$pkg: unable to add this machine to the cluster"
+    status=$(curl -f -sw %{http_code} -XPOST "$etcd_good_member_url/v2/members" -H "Content-Type: application/json" -d "{\"peerURLs\": [\"http://$ec2_instance_ip:2380\"], \"name\": \"$ec2_instance_id\"}")
+    if [ $status != "$ADD_OK" ];
+    then
+    	echo "$pkg: unable to add $$ec2_instance_ip to the cluster: return code $status."
     	exit 7
     fi
     
