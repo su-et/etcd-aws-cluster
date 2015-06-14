@@ -43,8 +43,13 @@ Workflow
 
 
 Usage
+----
+```
+image=suet/etcd-aws-cluster
+/usr/bin/docker pull $image
+/usr/bin/docker run -e REGION="us-west-2" -v /etc/sysconfig/:/etc/sysconfig/ $image /etcd-aws-cluster
+```
+
+Reference
 -----
-
-```docker run -v /etc/sysconfig/:/etc/sysconfig/ MonsantoCo/etcd-aws-cluster```
-
-
+Forked from [etcd-aws-cluster](https://github.com/MonsantoCo/etcd-aws-cluster). See change logs for changes.
