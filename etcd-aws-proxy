@@ -1,0 +1,31 @@
+#! /bin/bash
+pkg="getPeers"
+version="0.3"
+etcd_initial_cluster_file_path="/etc/sysconfig/initial-cluster"
+region=${REGION:-"us-east-1"}
+asg_name=${ASGNAME}
+
+#if the script has already run just exit
+if [ -f "$etcd_inital_cluster_file_path" ]; then
+    echo "$pkg: initial-cluster file $etcd_peers_file_path already created, exiting"
+    exit 0
+fi
+
+if [[ ! $asg_name ]]; then
+    echo "$pkg: failed to get the auto scaling group name. Forgot to use -e ASGNAME=<name>?"
+    exit 3
+fi
+
+etcd_initial_cluster=$(aws ec2 describe-instances --region $region --instance-ids \
+         $(aws autoscaling describe-auto-scaling-groups --region $region --auto-scaling-group-name $asg_name \
+         | jq .AutoScalingGroups[0].Instances[].InstanceId | xargs) \
+         | jq -r '.Reservations[].Instances | map(.InstanceId + "=http://" + .NetworkInterfaces[].PrivateIpAddress + ":2379")[]' \
+         | xargs | sed 's/  */,/g')
+
+if [[ ! $etcd_initial_cluster ]]; then
+    echo "$pkg: unable to find members of auto scaling group"
+    exit 4
+fi
+
+echo "etcd_initial_cluster=$etcd_initial_cluster"
+echo "ETCD_INITIAL_CLUSTER=$etcd_initial_cluster" > $etcd_initial_cluster_file_path

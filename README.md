@@ -44,10 +44,17 @@ Workflow
 
 Usage
 ----
+
+To create the etcd cluster:
+
 ```
 image=suet/etcd-aws-cluster
 /usr/bin/docker pull $image
 /usr/bin/docker run -e REGION="us-west-2" -v /etc/sysconfig/:/etc/sysconfig/ $image /etcd-aws-cluster
+```
+To create the etcd proxy:
+```
+/usr/bin/docker run -e REGION="us-west-2" -v /etc/sysconfig/:/etc/sysconfig/ $image /etcd-aws-proxy
 ```
 
 Reference
