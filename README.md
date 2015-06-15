@@ -54,7 +54,7 @@ image=suet/etcd-aws-cluster
 ```
 To create the etcd proxy:
 ```
-/usr/bin/docker run -e REGION="us-west-2" -v /etc/sysconfig/:/etc/sysconfig/ $image /etcd-aws-proxy
+/usr/bin/docker run -e ASGNAME="docker-etcd2" -e REGION="us-west-2" -v /etc/sysconfig/:/etc/sysconfig/ $image /etcd-aws-proxy
 ```
 
 Reference
