@@ -11,6 +11,7 @@ RUN apk --update add \
       mkdir /root/.aws
 
 COPY etcd-aws-cluster /etcd-aws-cluster
+COPY etcd-aws-cluster /etcd-aws-proxy
 
 #Expose directory to write output to
 VOLUME ["/etc/sysconfig/"]
