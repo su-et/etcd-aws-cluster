@@ -5,12 +5,6 @@ etcd_initial_cluster_file_path="/etc/sysconfig/initial-cluster"
 region=${REGION:-"us-east-1"}
 asg_name=${ASGNAME}
 
-#if the script has already run just exit
-if [ -f "$etcd_inital_cluster_file_path" ]; then
-    echo "$pkg: initial-cluster file $etcd_peers_file_path already created, exiting"
-    exit 0
-fi
-
 if [[ ! $asg_name ]]; then
     echo "$pkg: failed to get the auto scaling group name. Forgot to use -e ASGNAME=<name>?"
     exit 3
