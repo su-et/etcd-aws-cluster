@@ -19,7 +19,7 @@ fi
 etcd_initial_cluster=$(aws ec2 describe-instances --region $region --instance-ids \
          $(aws autoscaling describe-auto-scaling-groups --region $region --auto-scaling-group-name $asg_name \
          | jq .AutoScalingGroups[0].Instances[].InstanceId | xargs) \
-         | jq -r '.Reservations[].Instances | map(.InstanceId + "=http://" + .NetworkInterfaces[].PrivateIpAddress + ":2379")[]' \
+         | jq -r '.Reservations[].Instances | map(.InstanceId + "=http://" + .NetworkInterfaces[].PrivateIpAddress + ":2380")[]' \
          | xargs | sed 's/  */,/g')
 
 if [[ ! $etcd_initial_cluster ]]; then
@@ -29,3 +29,13 @@ fi
 
 echo "etcd_initial_cluster=$etcd_initial_cluster"
 echo "ETCD_INITIAL_CLUSTER=$etcd_initial_cluster" > $etcd_initial_cluster_file_path
+
+# Upload to S3 bucket
+account=$(aws --region $region autoscaling describe-auto-scaling-groups --auto-scaling-group-names=$ASGNAME \
+          | jq ".AutoScalingGroups[].AutoScalingGroupARN" | cut -d":" -f5)
+discovery_bucket="s3://${account}-cloud-config"
+if ! aws --region $region s3 ls $discovery_bucket > /dev/null 2>&1 ;
+then
+  aws --region $region s3 mb $discovery_bucket 
+fi
+aws --region $region s3 cp $etcd_initial_cluster_file_path $discovery_bucket/etcd/$(basename $etcd_initial_cluster_file_path)
