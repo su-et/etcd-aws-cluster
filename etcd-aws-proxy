@@ -21,13 +21,14 @@ if [[ ! $etcd_initial_cluster ]]; then
     exit 4
 fi
 
+# Upload to S3 bucket. 
+account=$(aws --region $region autoscaling describe-auto-scaling-groups --auto-scaling-group-names=$ASGNAME \
+          | jq ".AutoScalingGroups[].AutoScalingGroupARN" | cut -d":" -f5)
+discovery_bucket=${S3BUCKET:-"s3://${account}-cloud-config"}
+
 echo "etcd_initial_cluster=$etcd_initial_cluster"
 echo "ETCD_INITIAL_CLUSTER=$etcd_initial_cluster" > $etcd_initial_cluster_file_path
 
-# Upload to S3 bucket
-account=$(aws --region $region autoscaling describe-auto-scaling-groups --auto-scaling-group-names=$ASGNAME \
-          | jq ".AutoScalingGroups[].AutoScalingGroupARN" | cut -d":" -f5)
-discovery_bucket="s3://${account}-cloud-config"
 if ! aws --region $region s3 ls $discovery_bucket > /dev/null 2>&1 ;
 then
   aws --region $region s3 mb $discovery_bucket 
