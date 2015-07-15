@@ -14,6 +14,12 @@ add_ok=201
 already_added=409
 delete_ok=204
 
+# https://github.com/coreos/etcd/blob/master/Documentation/admin_guide.md
+# Ignore timeout (default 5 second. not tunable). request might be processed later
+# Ignore if the node is already gone.
+delete_timeout=500
+delete_gone=410
+
 #if the script has already run just exit
 if [ -f "$etcd_peers_file_path" ]; then
     echo "$pkg: etcd-peers file $etcd_peers_file_path already created, exiting"
@@ -89,7 +95,7 @@ if [[ $etcd_existing_peer_urls && $etcd_existing_peer_names != *"$ec2_instance_i
         for bp in $bad_peer; do
             echo "removing bad peer $bp"
             status=$(curl -f -s -w %{http_code} "$etcd_good_member_url/v2/members/$bp" -XDELETE)
-            if [[ $status != $delete_ok ]]; then
+            if [[ $status != $delete_ok && $stauts != $delete_timeout && $status != $delete_gone ]]; then
                 echo "$pkg: ERROR: failed to remove bad peer: $bad_peer, return code $status."
                 exit 7
             fi
