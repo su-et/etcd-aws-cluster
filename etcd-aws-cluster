@@ -95,7 +95,7 @@ if [[ $etcd_existing_peer_urls && $etcd_existing_peer_names != *"$ec2_instance_i
         for bp in $bad_peer; do
             echo "removing bad peer $bp"
             status=$(curl -f -s -w %{http_code} "$etcd_good_member_url/v2/members/$bp" -XDELETE)
-            if [[ $status != $delete_ok && $stauts != $delete_timeout && $status != $delete_gone ]]; then
+            if [[ $status != $delete_ok && $status != $delete_timeout && $status != $delete_gone ]]; then
                 echo "$pkg: ERROR: failed to remove bad peer: $bad_peer, return code $status."
                 exit 7
             fi
