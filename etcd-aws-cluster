@@ -16,8 +16,8 @@ delete_ok=204
 
 # https://github.com/coreos/etcd/blob/master/Documentation/admin_guide.md
 # Ignore timeout (default 5 second. not tunable). request might be processed later
+client_timeout=500
 # Ignore if the node is already gone.
-delete_timeout=500
 delete_gone=410
 
 #if the script has already run just exit
@@ -95,7 +95,7 @@ if [[ $etcd_existing_peer_urls && $etcd_existing_peer_names != *"$ec2_instance_i
         for bp in $bad_peer; do
             echo "removing bad peer $bp"
             status=$(curl -f -s -w %{http_code} "$etcd_good_member_url/v2/members/$bp" -XDELETE)
-            if [[ $status != $delete_ok && $status != $delete_timeout && $status != $delete_gone ]]; then
+            if [[ $status != $delete_ok && $status != $client_timeout && $status != $delete_gone ]]; then
                 echo "$pkg: ERROR: failed to remove bad peer: $bad_peer, return code $status."
                 exit 7
             fi
@@ -112,7 +112,7 @@ if [[ $etcd_existing_peer_urls && $etcd_existing_peer_names != *"$ec2_instance_i
     # join an existing cluster
     echo "adding instance ID $ec2_instance_id with IP $ec2_instance_ip"
     status=$(curl -f -s -w %{http_code} -o /dev/null -XPOST "$etcd_good_member_url/v2/members" -H "Content-Type: application/json" -d "{\"peerURLs\": [\"http://$ec2_instance_ip:2380\"], \"name\": \"$ec2_instance_id\"}")
-    if [[ $status != $add_ok && $status != $already_added ]]; then
+    if [[ $status != $add_ok && $status != $already_added && $status != $client_timeout ]]; then
         echo "$pkg: unable to add $ec2_instance_ip to the cluster: return code $status."
     	exit 9
     fi
