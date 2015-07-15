@@ -102,6 +102,7 @@ if [[ $etcd_existing_peer_urls && $etcd_existing_peer_names != *"$ec2_instance_i
                 echo "$pkg: ERROR: failed to remove bad peer: $bad_peer, return code $status."
                 exit 7
             fi
+            sleep $wait_time
         done
     fi
     
