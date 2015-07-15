@@ -20,6 +20,9 @@ client_timeout=500
 # Ignore if the node is already gone.
 delete_gone=410
 
+# Add a sleep time to allow add new member to finish.
+wait_time=5
+
 #if the script has already run just exit
 if [ -f "$etcd_peers_file_path" ]; then
     echo "$pkg: etcd-peers file $etcd_peers_file_path already created, exiting"
@@ -116,7 +119,8 @@ if [[ $etcd_existing_peer_urls && $etcd_existing_peer_names != *"$ec2_instance_i
         echo "$pkg: unable to add $ec2_instance_ip to the cluster: return code $status."
     	exit 9
     fi
-    
+    # Work around to allow add to finish before starting etcd. Otherwise, etcd gets  member count is unequal error
+    sleep $wait_time
     cat > "$etcd_peers_file_path" <<EOF
 ETCD_INITIAL_CLUSTER_STATE=existing
 ETCD_NAME=$ec2_instance_id
