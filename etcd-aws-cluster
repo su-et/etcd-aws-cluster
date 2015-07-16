@@ -119,9 +119,13 @@ if [[ $etcd_existing_peer_urls && $etcd_existing_peer_names != *"$ec2_instance_i
     if [[ $status != $add_ok && $status != $already_added && $status != $client_timeout ]]; then
         echo "$pkg: unable to add $ec2_instance_ip to the cluster: return code $status."
     	exit 9
+    else
+        # Work around to allow add to finish before starting etcd. Otherwise, etcd gets  member count is unequal error
+        sleep $wait_time
+        e=$(curl-s http://10.0.2.151:2379/v2/members | jq --raw-output .[][].peerURLs[0])
+        echo "added $ec2_instance_ip to existing cluster: $e"
     fi
-    # Work around to allow add to finish before starting etcd. Otherwise, etcd gets  member count is unequal error
-    sleep $wait_time
+        
     cat > "$etcd_peers_file_path" <<EOF
 ETCD_INITIAL_CLUSTER_STATE=existing
 ETCD_NAME=$ec2_instance_id
