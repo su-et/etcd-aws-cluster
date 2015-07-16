@@ -127,7 +127,7 @@ if [[ $etcd_existing_peer_urls && $etcd_existing_peer_names != *"$ec2_instance_i
         echo "$pkg: unable to add $ec2_instance_ip to the cluster: return code $status."
     	exit 9
     else
-        echo "added $ec2_instance_ip to existing cluster: $e"
+        echo "added $ec2_instance_ip to existing cluster, return code $status"
     fi
         
     cat > "$etcd_peers_file_path" <<EOF
