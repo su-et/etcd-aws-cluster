@@ -15,7 +15,7 @@ delete_ok=204
 delete_gone=410
 
 # Retry N times before giving up
-retry_times=${RETRT_TIMES:-10}
+retry_times=${RETRY_TIMES:-10}
 # Add a sleep time to allow etcd client requets to finish
 wait_time=3
 
