@@ -15,8 +15,8 @@ delete_ok=204
 delete_gone=410
 
 # Retry N times before giving up
-retry_times=3
-# Add a sleep time to allow etcd client reques to finish
+retry_times=5
+# Add a sleep time to allow etcd client requets to finish
 wait_time=3
 
 #if the script has already run just exit
