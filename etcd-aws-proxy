@@ -3,25 +3,36 @@ pkg="etcd-aws-proxy"
 version="0.4"
 etcd_peers_file_path="/etc/sysconfig/etcd-peers"
 etcd_initial_cluster_file_path="/etc/sysconfig/initial-cluster"
-# Upload to S3 bucket. Either pass in as S3BUCKET or generate one from AWS account name. 
-account=$(aws --region $region autoscaling describe-auto-scaling-groups --auto-scaling-group-names=$ASGNAME \
+
+# Upload to S3 bucket. Either pass in as S3BUCKET (e.g. s3://my-clountinit-bucket) or generate one from AWS account name. 
+# initial-cluster file will be uploaded as S3BUCKET/etcd/initial-cluster.
+region=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq --raw-output .region)
+ec2_instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+if [[ ! $ec2_instance_id ]]; then
+    echo "$pkg: failed to get instance id from instance metadata"
+    exit 2
+fi
+asg_name=$(aws autoscaling describe-auto-scaling-groups --region $region | jq --raw-output ".[] | map(select(.Instances[].InstanceId | contains(\"$ec2_instance_id\"))) | .[].AutoScalingGroupName")
+if [[ ! $asg_name ]]; then
+    echo "$pkg: failed to get the auto scaling group name"
+    exit 4
+fi
+account=$(aws --region $region autoscaling describe-auto-scaling-groups --auto-scaling-group-names=$asg_name \
           | jq ".AutoScalingGroups[].AutoScalingGroupARN" | cut -d":" -f5)
 discovery_bucket=${S3BUCKET:-"s3://${account}-coreos-cluster-cloudinit"}
 
-
-if [[ ! $etcd_peers_file_path ]]; then
+if [[ ! -f "$etcd_peers_file_path" ]]; then
     echo "$pkg: $$etcd_peers_file_path doesn't exist."
     exit 4
 else
-    if  etcd_initial_cluster=$(grep ETCD_INITIAL_CLUSTERR= $etcd_peers_file_path) ; 
+    if  etcd_initial_cluster=$(grep ETCD_INITIAL_CLUSTER= $etcd_peers_file_path) ; 
     then 
-        echo $etcd_initial_cluster
+        echo $etcd_initial_cluster > $etcd_initial_cluster_file_path
     else
-        echo "$pkg: $$etcd_peers_file_path doesn't exist."
+        echo "$pkg: $$etcd_peers_file_path doesn't have ETCD_INITIAL_CLUSTE."
         exit 4
     fi
 fi
-echo "ETCD_INITIAL_CLUSTER=$etcd_initial_cluster" > $etcd_initial_cluster_file_path
 
 if ! aws --region $region s3 ls $discovery_bucket > /dev/null 2>&1 ;
 then
