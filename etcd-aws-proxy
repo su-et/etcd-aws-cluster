@@ -10,8 +10,7 @@ etcd_initial_cluster_file_path="/etc/sysconfig/initial-cluster"
 # Get S3 bucket url. Either pass in as S3BUCKET (e.g. s3://my-coreos-cluster-clountinit) 
 # or generate one from AWS account name: s3://${account}-coreos-cluster-cloudinit. 
 # initial-cluster file will be uploaded as S3BUCKET/etcd/initial-cluster.
-account=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document \
-	| grep -Eo '([[:digit:]]{12})')
+account=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq --raw-output .accountId)
 if [[ ! $account ]]; then
     echo "$pkg: failed to get the aws account id."
     exit 4
